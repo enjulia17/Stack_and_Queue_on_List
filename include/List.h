@@ -1,365 +1,245 @@
+#pragma once
 #include <iostream>
+#include <cmath>
 
 using namespace std;
-
-template <class T>
-class TListElem
+template<class A2>
+class Node
 {
-protected:
-	T data;
-	TListElem* next;
-	TListElem* prev;
 public:
-	TListElem(T _data);
-	~TListElem();
-	T GetData();
-	TListElem* GetNext();
-	TListElem* GetPrev();
-	void SetData(T _data);
-	void SetNext(TListElem* _next);
-	void SetPrev(TListElem* _prev);
-	template <class T1>
-	friend ostream& operator<< (ostream& ostr, const TListElem<T1>& A);
-	template <class T1>
-	friend istream& operator >> (istream& istr, TListElem<T1>& A);
+	Node() :next(nullptr) {}
+	A2 value;
+	Node* next;
 };
 
-template <class T>
-class TList
+
+template<class A1>
+class List
 {
-protected:
-	TListElem<T>* root;
-	TListElem<T>* end;
-	int count;
 public:
-	TList();
-	TList(TList<T>& _v);
-	~TList();
-	TList<T>& operator =(TList<T>& _v);
-	void InsFirst(T d);
-	void InsLast(T d);
-	void Ins(TListElem<T>* e, T d);
-	bool IsEmpty(void) const;
-	bool IsFull(void) const;
-	TListElem<T>* GetFirst();
-	TListElem<T>* GetLast();
-	void DelFirst();
-	void DelLast();
-	void Del(TListElem<T>* e);
-	template <class T1>
-	friend ostream& operator<< (ostream& ostr, const TList<T1> &A);
-	template <class T1>
-	friend istream& operator >> (istream& istr, TList<T1> &A);
-	int GetCount();
+	List() :head(nullptr), tail(nullptr), size(0) {}
+
+	List(List& lhs)
+	{
+		if (lhs.head == nullptr) throw logic_error("empty list");
+		size = lhs.size;
+		head = new Node<A1>;
+		Node<A1>* tmp = head;
+		Node<A1>* ptr = lhs.head;
+		for (int i = 1; i < size; i++)
+		{
+			tmp->next = new Node<A1>;
+			tmp = tmp->next;
+		}
+		tmp = head;
+		for (int i = 0; i < size; i++)
+		{
+			tail = tmp;
+			tmp->value = ptr->value;
+			ptr = ptr->next;
+			tmp = tmp->next;
+		}
+	}
+	List(List&& lhs)
+	{
+		head = move(lhs.head);
+		size = lhs.size;
+		lhs.head = nullptr;
+		tail = lhs.tail;
+		lhs.tail = nullptr;
+		lhs.size = 0;
+	}
+	~List()
+	{
+		if (!(*this).IsEmpty()) {
+			Node<A1>* tmp = head;
+
+			while (tmp->next != nullptr)
+			{
+				tmp = tmp->next;
+				delete head;
+				head = tmp;
+			}
+		}
+	}
+	List& operator =(List&& lhs)
+	{
+		this->head = move(lhs.head);
+		this->tail = move(lhs.tail);
+		this->size = lhs.size;
+		lhs.head = nullptr;
+		lhs.tail = nullptr;
+		lhs.size = 0;
+		return this;
+	}
+	bool IsEmpty()
+	{
+		return(head == nullptr);
+	}
+	int GetSize()
+	{
+		return size;
+	}
+	void push_back(const A1& lhs)
+	{
+		if (!(*this).IsEmpty()) {
+			tail->next = new Node<A1>;
+			tail->next->value = lhs;
+			tail->next->next = nullptr;
+			tail = tail->next;
+		}
+		else
+		{
+			head = new Node<A1>;
+			head->value = lhs;
+			head->next = nullptr;
+			tail = head;
+		}
+		size++;
+	}
+
+	void push_front(const A1& lhs)
+	{
+		Node<A1>* tmp = new Node<A1>;
+		tmp->value = lhs;
+		tmp->next = head;
+		head = tmp;
+		size++;
+	}
+	A1& pop_front()
+	{
+		if (head == nullptr) throw logic_error("container is empty");
+		Node<A1>* tmp = head->next;
+		A1 tm = head->value;
+		delete head;
+		size--;
+		head = tmp;
+		return tm;
+	}
+	A1& pop_back()
+	{
+		if ((*this).IsEmpty()) throw logic_error("container is empty");
+		Node<A1>* tmp = head;
+
+		while ((head->next)->next != nullptr)
+		{
+			head = head->next;
+		}
+		A1 tmp1 = head->next->value;
+		delete head->next;
+		head->next = nullptr;
+		tail = head;
+		head = tmp;
+		size--;
+		return tmp1;
+
+	}
+	List<A1> GCD(const A1& lhs)
+	{
+		int Size = this->GetSize();
+		List<A1>tmp1;
+		Node<A1>* tmp = head;
+
+		for (int i = 0; i < Size; i++)
+		{
+			if (lhs % (head->value) == 0) {
+				tmp1.push_front(head->value);
+			}
+			head = head->next;
+		}
+		head = tmp;
+		return tmp1;
+	}
+	A1& pop(Node<A1>* prev)
+	{
+		if (prev->next == nullptr) throw logic_error("last_element");
+		Node<A1>* del = prev->next;
+		Node<A1>* last = del->next;
+		A1 ret = del->value;
+		delete del;
+		prev->next = last;
+		size--;
+		return ret;
+
+	}
+	void push_after(Node<A1>* prev, const A1& data)
+	{
+		if (prev == nullptr) throw logic_error("nullptr");
+		if (prev == head)
+		{
+			if (data > head->value) {
+				this->push_front(data);
+			}
+			else
+			{
+				this->push_back(data);
+			}
+			return;
+		}
+		Node<A1>* next_after_prev = prev->next;
+		prev->next = new Node<A1>;
+		prev->next->value = data;
+		prev->next->next = next_after_prev;
+	}
+	void reverse()
+	{
+		if ((*this).IsEmpty()) throw logic_error("list is empty");
+		int Size = this->GetSize();
+		Node<A1>* ls = head;
+		for (int i = 1; i < Size; i++)
+		{
+			A1 tmp = (*this).pop(ls);
+			(*this).push_front(tmp);
+		}
+
+	}
+	void Sort()
+	{
+		if ((*this).IsEmpty()) throw logic_error("list is empty");
+		List<A1>res;
+		Node<A1> min;
+		Node<A1>* newhead = new Node<A1>;
+		newhead->next = head;
+		head = newhead;
+		min.value = head->next->value;
+		min.next = head;
+		Node<A1>* t = head;
+		while (!(head->next == nullptr))
+		{
+			Node<A1>* t = head;
+			min.value = head->next->value;
+			min.next = head;
+			for (int i = 0; i < size; i++) {
+
+				if (t->next->value < min.value)
+				{
+					min.value = t->next->value;
+					min.next = t;
+				}
+				t = t->next;
+			}
+			(*this).pop(min.next);
+			res.push_front(min.value);
+		}
+		delete (*this).head;
+		(*this).head = res.head;
+		res.head = nullptr;
+		size = res.size;
+	}
+	template<class A1>
+	friend ostream& operator<<(ostream& out, List<A1>& lhs)
+	{
+		Node<A1>* tmp = lhs.head;
+		while (tmp->next != nullptr)
+		{
+			out << tmp->value << "->";
+			tmp = tmp->next;
+		}
+		cout << tmp->value << "\n";
+		return out;
+	}
+private:
+	Node<A1>* head;
+	Node<A1>* tail;
+	int size;
 };
-
-template<class T1>
-inline ostream& operator<<(ostream& ostr, const TListElem<T1>& A)
-{
-	ostr << A.data;
-	return ostr;
-}
-
-template<class T1>
-inline istream& operator >> (istream& istr, TListElem<T1>& A)
-{
-	istr >> A.data;
-	return istr;
-}
-
-template <class T1>
-ostream& operator<< (ostream& ostr, const TList<T1> &A) 
-{
-	TListElem<T1>* i = A.root;
-
-	while (i != 0)
-	{
-		ostr << *i << endl;
-		i = i->GetNext();
-	}
-	return ostr;
-}
-
-template <class T1>
-istream& operator >> (istream& istr, TList<T1> &A) {
-	int count;
-	istr >> count;
-	for (int i = 0; i < count; i++)
-	{
-		T1 d;
-		istr >> d;
-		A.InsLast(d);
-	}
-	return istr;
-}
-
-template<class T>
-inline TList<T>::TList()
-{
-	root = 0;
-	end = 0;
-	count = 0;
-}
-
-template <class T>
-TList<T>::TList(TList<T>& _v)
-{
-	count = _v.count;
-	TListElem<T>* i = _v.root;
-	TListElem<T>* j = this->root;
-	TListElem<T>* p = 0;
-
-	while (i != 0)
-	{
-		j = new TListElem<T>(*i);
-		j->SetNext(0);
-		if (p != 0)
-		{
-			p->SetNext(j);
-			j->SetPrev(p);
-		}
-
-		p = j;
-
-		if (root == 0)
-			root = j;
-
-		end = j;
-
-		i = i->next();
-	}
-}
-template <class T>
-TList<T>::~TList()
-{
-	if (this->root != 0)
-	{
-		TListElem<T>* i = this->root;
-		TListElem<T>* p = 0;
-
-		while (i != 0)
-		{
-			p = i;
-			i = i->GetNext();
-			delete p;
-		}
-
-		this->root = 0;
-		this->end = 0;
-		count = 0;
-	}
-}
-
-template <class T>
-TList<T>& TList<T>::operator =(TList<T>& _v)
-{
-	if (this == &_v)
-		return *this;
-
-	if (this->root != 0)
-	{
-		TListElem<T>* i = this->root;
-		TListElem<T>* p = 0;
-
-		while (i != 0)
-		{
-			p = i;
-			i = i->GetNext();
-			delete p;
-		}
-
-		this->root = 0;
-		this->end = 0;
-		count = 0;
-	}
-
-	count = _v.count;
-
-	TListElem<T>* i = _v.root;
-	TListElem<T>* j = this->root;
-	TListElem<T>* p = 0;
-
-	while (i != 0)
-	{
-		j = new TListElem<T>(*i);
-		j->SetNext(0);
-		if (p != 0)
-		{
-			p->SetNext(j);
-			j->SetPrev(p);
-		}
-
-		p = j;
-
-		if (root == 0)
-			root = j;
-
-		end = j;
-
-		i = i->next();
-	}
-
-}
-
-template<class T>
-inline void TList<T>::InsFirst(T d)
-{
-	TListElem<T>* tmp = new TListElem<T>(d);
-	tmp->SetNext(root);
-	root = tmp;
-	if (end == 0)
-		end = tmp;
-	count++;
-}
-
-template<class T>
-inline void TList<T>::InsLast(T d)
-{
-	TListElem<T>* tmp = new TListElem<T>(d);
-	tmp->SetPrev(end);
-	end = tmp;
-	count++;
-}
-
-template<class T>
-inline void TList<T>::Ins(TListElem<T>* e, T d)
-{
-	TListElem<T>* tmp = new TListElem<T>(d);
-	tmp->SetNext(e->GetNext());
-	tmp->SetPrev(e);
-	e->GetNext()->SetPrev(tmp);
-	e->SetNext(tmp);
-	count++;
-}
-
-template<class T>
-inline bool TList<T>::IsEmpty(void) const
-{
-	return count == 0;
-}
-
-template<class T>
-inline bool TList<T>::IsFull(void) const
-{
-	try
-	{
-		TListElem<T>* tmp = new TListElem<T>(0);
-		delete tmp;
-		return false;
-	}
-	catch (...)
-	{
-		return true;
-	}
-
-}
-
-template<class T>
-inline TListElem<T>* TList<T>::GetFirst()
-{
-	if ((*this).IsEmpty())
-		throw logic_error("empty_list");
-	return root;
-}
-
-template<class T>
-inline TListElem<T>* TList<T>::GetLast()
-{
-	if ((*this).IsEmpty())
-		throw logic_error("empty_list");
-	return end;
-}
-
-template<class T>
-inline void TList<T>::DelFirst()
-{
-	if (root == 0) throw logic_error("invalid argument");
-	TListElem<T>* i = root;
-	root = root->GetNext();
-	delete i;
-	count--;
-}
-
-template<class T>
-inline void TList<T>::DelLast()
-{
-	if ((*this).IsEmpty()) throw logic_error("empty list");
-	TListElem<T>* j = root;
-	if (j->GetNext() != 0) {
-		while (j->GetNext()->GetNext() != 0) {
-			j = j->GetNext();
-		}
-		delete j->GetNext();
-		j->SetNext(0);
-		return;
-	}
-	delete j;
-	root = 0;
-}
-
-template<class T>
-inline void TList<T>::Del(TListElem<T>* e)
-{
-	e->GetPrev()->SetNext(e->GetNext());
-	e->GetNext()->SetPrev(e->GetPrev());
-	count--;
-	delete e;
-}
-
-template<class T>
-inline int TList<T>::GetCount()
-{
-	return count;
-}
-
-
-template<class T>
-inline TListElem<T>::TListElem(T _data)
-{
-	data = _data;
-	next = 0;
-	prev = 0;
-}
-
-template<class T>
-inline TListElem<T>::~TListElem()
-{
-	next = 0;
-	prev = 0;
-}
-
-template<class T>
-inline T TListElem<T>::GetData()
-{
-	return data;
-}
-
-template<class T>
-inline TListElem<T>* TListElem<T>::GetNext()
-{
-	return next;
-}
-
-template<class T>
-inline TListElem<T>* TListElem<T>::GetPrev()
-{
-	return prev;
-}
-
-template<class T>
-inline void TListElem<T>::SetData(T _data)
-{
-	data = _data;
-}
-
-template<class T>
-inline void TListElem<T>::SetNext(TListElem<T>* _next)
-{
-	next = _next;
-}
-
-template<class T>
-inline void TListElem<T>::SetPrev(TListElem<T>* _prev)
-{
-	prev = _prev;
-}
