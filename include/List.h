@@ -10,8 +10,43 @@ public:
 	Node() :next(nullptr) {}
 	A2 value;
 	Node* next;
+
+	template<class T2>
+	friend class ListIterator;
 };
 
+template<class T>
+class ListIterator
+{
+private:
+	Node<T>* node;
+public:
+	ListIterator(Node<T>* _n) : node(_n) {}
+	ListIterator(ListIterator& _v) : node(_v.node) {}
+
+	bool CanMove() { return (node != nullptr); }
+	void Move() { node = node->next; }
+
+	ListIterator operator++(int)
+	{
+		if (!CanMove())
+			throw logic_error("end");
+		Move();
+		return (*this);
+	}
+	ListIterator& operator=(const ListIterator& _v)
+	{
+		node = _v.node;
+		return (*this);
+	}
+
+	T& operator* () {
+		if (node != nullptr)
+			return node->value;
+		else
+			throw logic_error("empty");
+	}
+};
 
 template<class A1>
 class List
@@ -80,6 +115,9 @@ public:
 	{
 		return size;
 	}
+
+	ListIterator<A1> begin() { return ListIterator<A1>(head); }
+
 	void push_back(const A1& lhs)
 	{
 		if (!(*this).IsEmpty()) {
@@ -104,6 +142,8 @@ public:
 		tmp->value = lhs;
 		tmp->next = head;
 		head = tmp;
+		if (head->next == nullptr)
+			tail = head;
 		size++;
 	}
 	A1& pop_front()
@@ -119,19 +159,27 @@ public:
 	A1& pop_back()
 	{
 		if ((*this).IsEmpty()) throw logic_error("container is empty");
-		Node<A1>* tmp = head;
 
-		while ((head->next)->next != nullptr)
+		if (size == 1)
 		{
-			head = head->next;
+			pop_front();
 		}
-		A1 tmp1 = head->next->value;
-		delete head->next;
-		head->next = nullptr;
-		tail = head;
-		head = tmp;
-		size--;
-		return tmp1;
+		else
+		{
+			Node<A1>* tmp = head;
+
+			while ((head->next)->next != nullptr)
+			{
+				head = head->next;
+			}
+			A1 tmp1 = head->next->value;
+			delete head->next;
+			head->next = nullptr;
+			tail = head;
+			head = tmp;
+			size--;
+			return tmp1;
+		}
 
 	}
 	List<A1> GCD(const A1& lhs)
