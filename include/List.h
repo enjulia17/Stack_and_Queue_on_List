@@ -159,10 +159,10 @@ public:
 	A1& pop_back()
 	{
 		if ((*this).IsEmpty()) throw logic_error("container is empty");
-
+		A1 tmp1 = 0;
 		if (size == 1)
 		{
-			pop_front();
+			tmp1 = pop_front();
 		}
 		else
 		{
@@ -172,14 +172,15 @@ public:
 			{
 				head = head->next;
 			}
-			A1 tmp1 = head->next->value;
+			tmp1 = head->next->value;
 			delete head->next;
 			head->next = nullptr;
 			tail = head;
 			head = tmp;
 			size--;
-			return tmp1;
+			
 		}
+		return tmp1;
 
 	}
 	List<A1> GCD(const A1& lhs)
